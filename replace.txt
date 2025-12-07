@@ -1,0 +1,3 @@
+-- This is a comment line. Add your replacement rules below. The sample below replaces 'sample1' with 'sample2' after machine translation.
+
+sample1:sample2
