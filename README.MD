@@ -1,4 +1,7 @@
-# DCS Rosetta for DeepL, MS Translator - Mission translator
+
+# DCS Rosetta for DeepL, MS Translator - Mission Translator
+
+BUILDING INFO: You should build with Python 3.7 and luaparser 3.2.1 because bleeding edge versions of them have the problem of not parsing the line break properly.
 
 DCS Rosetta is a free application to automatically translate missions and campaigns for the DCS World flight simulator. The original version used Yandex engine, but it hasn’t worked for some time because Yandex no longer offers free API keys. So I converted to work with DeepL and MS Azure engine. And some new features are also available!
 
@@ -7,14 +10,14 @@ DCS Rosetta is a free application to automatically translate missions and campai
 ## SETUP
 
 To use the program, you need to issue and register an API key. You can also choose to register and use only one of the 2 engines.
+If the file does not run, right-click the file and select [Properties]. In the [General] tab, under the [Security] section, check the [Unblock] box and click [Apply].
 
 
 ### DeepL
 
 1. Go to the DeepL website. https://www.deepl.com
 
-2. Log in, then click 'Sign up for free' under 'DeepL API Free' to subscribe to the free plan. https://www.dee
-pl.com/en/pro-api#api-pricing
+2. Log in, then click 'Sign up for free' under 'DeepL API Free' to subscribe to the free plan on this page. https://www.deepl.com/en/pro-api#api-pricing
 
 3. You can generate an API key on this page. https://www.deepl.com/en/your-account/keys
 
@@ -23,7 +26,6 @@ pl.com/en/pro-api#api-pricing
 5. Paste the API key into the 'Translator Key' field of DCS Rosetta Program.
 
 6. Press the Save button to save the key.
-
 
 
 ### MS (Azure)
@@ -50,7 +52,7 @@ pl.com/en/pro-api#api-pricing
 
 ## BASIC USAGE
 
-1. Select your language code in TO: language combobox.
+1. Select your language code in 'Translated language' combobox.
 
 2. Press 'Browse' button to select mission(.miz) of campaign file(.cmp).
 
@@ -66,7 +68,7 @@ pl.com/en/pro-api#api-pricing
 
 In advanced mode, you can save translated texts as excel file, correct the translations before generate translated mission.
 
-1. Select your language code in TO: language combobox.
+1. Select your language code in 'Translated language' combobox.
 
 2. Press 'Browse' button to select mission(.miz) of campaign file(.cmp).
 
@@ -88,7 +90,6 @@ In advanced mode, you can save translated texts as excel file, correct the trans
 
 
 
-
 ## MORE OPTIONS
 
 - Prevent rename: If checked, translated file will be saved in sub folder rather than renaming the file name.
@@ -102,4 +103,11 @@ In advanced mode, you can save translated texts as excel file, correct the trans
 - ID Filters: Texts like Unit Name, Group Name doesn't need translation. If ID of text includes items in this list, it will be omited from the translation.
 
 - R.Rules (Replacement Rules): According to these rules, text replacement will be applied after the automatic translation. You can add your rule in format of 'text before:text after'
+
+
+
+## TROUBLESHOOTING
+
+- If a script error occurs in the middle of playing the translated mission, you need to restore the script in the Excel file to its original text and apply it in advanced mode.
+
 
