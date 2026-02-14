@@ -10,6 +10,7 @@ DCS Rosetta is a free application to automatically translate missions and campai
 ## SETUP
 
 To use the program, you need to issue and register an API key. You can also choose to register and use only one of the 2 engines.
+
 If the file does not run, right-click the file and select [Properties]. In the [General] tab, under the [Security] section, check the [Unblock] box and click [Apply].
 
 
