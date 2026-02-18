@@ -1,7 +1,7 @@
 
 # DCS Rosetta for DeepL, MS Translator - Mission Translator
 
-BUILDING INFO: You should build with Python 3.7 and luaparser 3.2.1 because bleeding edge versions of them have the problem of not parsing the line break properly.
+BUILDING INFO: You should build with Python 3.7.9 and luaparser 3.2.1 because bleeding edge versions of them have the problem of not parsing the line break properly.
 
 DCS Rosetta is a free application to automatically translate missions and campaigns for the DCS World flight simulator. The original version used Yandex engine, but it hasn’t worked for some time because Yandex no longer offers free API keys. So I converted to work with DeepL and MS Azure engine. And some new features are also available!
 
