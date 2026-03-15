@@ -58,7 +58,10 @@ CTRL_ID_CANCEL = 125
 CTRL_ID_FILTER = 126
 CTRL_ID_BILINGUAL = 127
 CTRL_ID_RRULES = 128
-CTRL_ID_TEST = 130
+CTRL_ID_ORG_DOWNLOAD = 129
+CTRL_ID_LUA_DETECT = 130
+CTRL_ID_CLEAR = 131
+CTRL_ID_TEST = 140
 
 MS_DEFAULT_DELAY = '20'
 DEEPL_DEFAULT_DELAY = '1'
@@ -66,7 +69,7 @@ DEEPL_DEFAULT_DELAY = '1'
 configDef = {}
 configDef['from_lang'     ] = 'Auto'
 configDef['to_lang'       ] = defLangCode
-configDef['use_default'   ] = False
+configDef['use_default'   ] = True
 configDef['use_custom'    ] = False
 configDef['custom_code'   ] = ''
 configDef['advanced_mode' ] = False
@@ -76,6 +79,8 @@ configDef['split_size'    ] = '100'
 configDef['delay'         ] = MS_DEFAULT_DELAY
 configDef['filter'        ] = 'UnitName,GroupName,WptName'
 configDef['bilingual'     ] = False
+configDef['lua_detect'    ] = True
+defaultLangs = ['AF', 'AM', 'AR', 'AS', 'AZ', 'BA', 'BE', 'BG', 'BHO', 'BN', 'BO', 'BRX', 'BS', 'CA', 'CS', 'CY', 'DA', 'DE', 'DOI', 'DSB', 'DV', 'EL', 'EN', 'ES', 'ET', 'EU', 'FA', 'FI', 'FIL', 'FJ', 'FO', 'FR', 'FR-CA', 'GA', 'GL', 'GOM', 'GU', 'HA', 'HE', 'HI', 'HNE', 'HR', 'HSB', 'HT', 'HU', 'HY', 'ID', 'IG', 'IKT', 'IS', 'IT', 'IU', 'IU-LATN', 'JA', 'KA', 'KK', 'KM', 'KMR', 'KN', 'KO', 'KS', 'KU', 'KY', 'LB', 'LN', 'LO', 'LT', 'LUG', 'LV', 'LZH', 'MAI', 'MG', 'MI', 'MK', 'ML', 'MN-CYRL', 'MN-MONG', 'MNI', 'MR', 'MS', 'MT', 'MWW', 'MY', 'NB', 'NE', 'NL', 'NSO', 'NYA', 'OR', 'OTQ', 'PA', 'PL', 'PRS', 'PS', 'PT', 'PT-PT', 'RO', 'RU', 'RUN', 'RW', 'SD', 'SI', 'SK', 'SL', 'SM', 'SN', 'SO', 'SQ', 'SR-CYRL', 'SR-LATN', 'ST', 'SV', 'SW', 'TA', 'TE', 'TH', 'TI', 'TK', 'TLH-LATN', 'TLH-PIQD', 'TN', 'TO', 'TR', 'TT', 'TY', 'UG', 'UK', 'UR', 'UZ', 'VI', 'XH', 'YO', 'YUA', 'YUE', 'ZH-HANS', 'ZH-HANT', 'ZU']
 
 def to_int(s):
     try:
@@ -114,6 +119,7 @@ class MainWindow(EzFrame):
         self.SetEnable(CTRL_ID_SAVE, True)
         self.SetEnable(CTRL_ID_BROWSE, True)
         self.SetVisible(CTRL_ID_DOWNLOAD, self.state['download-visible'])
+        self.SetVisible(CTRL_ID_ORG_DOWNLOAD, self.state['download-visible'])
         self.SetVisible(CTRL_ID_UPLOAD, self.state['upload-visible'  ])
         self.SetVisible(CTRL_ID_MAKE, self.state['make-visible'    ])
         self.SetVisible(CTRL_ID_REGION, self.state['region-visible'])
@@ -124,20 +130,23 @@ class MainWindow(EzFrame):
             self.SetEnable(CTRL_ID_TRANSLATE, False)
             self.SetVisible(CTRL_ID_CANCEL, False)
             self.SetEnable(CTRL_ID_DOWNLOAD , False)
-            self.SetEnable(CTRL_ID_UPLOAD   , False)
-            self.SetEnable(CTRL_ID_MAKE     , False)
         elif self.state['processing'] == True:
             self.SetVisible(CTRL_ID_TRANSLATE, False)
             self.SetEnable(CTRL_ID_TRANSLATE, True)
             self.SetVisible(CTRL_ID_CANCEL, True)
             self.SetEnable(CTRL_ID_DOWNLOAD , False)
-            self.SetEnable(CTRL_ID_UPLOAD   , False)
-            self.SetEnable(CTRL_ID_MAKE     , False)
         else:
             self.SetVisible(CTRL_ID_TRANSLATE, True)
             self.SetEnable(CTRL_ID_TRANSLATE, True)
             self.SetVisible(CTRL_ID_CANCEL, False)
             self.SetEnable(CTRL_ID_DOWNLOAD , self.state['download-enabled'])
+
+        if self.state['processing'] == True:
+            self.SetEnable(CTRL_ID_ORG_DOWNLOAD , False)
+            self.SetEnable(CTRL_ID_UPLOAD   , False)
+            self.SetEnable(CTRL_ID_MAKE     , False)
+        else:
+            self.SetEnable(CTRL_ID_ORG_DOWNLOAD , True)
             self.SetEnable(CTRL_ID_UPLOAD   , True)
             self.SetEnable(CTRL_ID_MAKE     , self.state['make-enabled'    ])
 
@@ -154,6 +163,7 @@ class MainWindow(EzFrame):
         self.UpdateValue(CTRL_ID_DELAY         , configDef['delay'         ])
         self.UpdateValue(CTRL_ID_FILTER        , configDef['filter'        ])
         self.UpdateValue(CTRL_ID_BILINGUAL     , configDef['bilingual'     ])
+        self.UpdateValue(CTRL_ID_LUA_DETECT    , configDef['lua_detect'    ])
 
     def save_config(self, values):
         configDef['from_lang'     ] = values[CTRL_ID_FROM_LANG]
@@ -168,6 +178,7 @@ class MainWindow(EzFrame):
         configDef['delay'         ] = values[CTRL_ID_DELAY]
         configDef['filter'        ] = values[CTRL_ID_FILTER]
         configDef['bilingual'     ] = values[CTRL_ID_BILINGUAL]
+        configDef['lua_detect'    ] = values[CTRL_ID_LUA_DETECT]
         self.easyConfig.saveConfig(configDef)
 
     def set_advanced_mode(self, enabled):
@@ -244,19 +255,22 @@ class MainWindow(EzFrame):
         textctrl_split_size = wx.TextCtrl(panel, CTRL_ID_SPLIT_SIZE, size=(70, -1))
         textctrl_delay = wx.TextCtrl(panel, CTRL_ID_DELAY, size=(70, -1))
         
+        defaultFrom = ['Auto'] + defaultLangs
+        defaultTo = defaultLangs
+        
         self.SetLayout(
             [
                 ['Translator:', wx.ComboBox(panel, CTRL_ID_TRANSLATOR, choices=translatorList, style=wx.CB_READONLY), wx.StaticText(panel, CTRL_ID_REGION_LABEL, label='Region:'), wx.TextCtrl(panel, CTRL_ID_REGION, size=(160, -1))],
                 ['Translator key:', wx.TextCtrl(panel, CTRL_ID_TRANSLATOR_KEY, size=(-1, -1)), wx.Button(panel, CTRL_ID_SAVE, 'Save')],
                 ['Mission or campaign file:', textctrl_path, wx.Button(panel, CTRL_ID_BROWSE, 'Browse')],
-                ['Original language:', wx.ComboBox(panel, CTRL_ID_FROM_LANG, choices=emptyList, style=wx.CB_READONLY), 'Translated language:', wx.ComboBox(panel, CTRL_ID_TO_LANG, choices=emptyList, style=wx.CB_READONLY), wx.CheckBox(panel, CTRL_ID_BILINGUAL, "Bilingual text")],
-                [wx.CheckBox(panel, CTRL_ID_USE_DEFAULT, "Overwrite default"), wx.CheckBox(panel, CTRL_ID_USE_CUSTOM, "Use custom code"), wx.TextCtrl(panel, CTRL_ID_CUSTOM_CODE, size=(100, -1)), wx.CheckBox(panel, CTRL_ID_PREVENT_RENAME, "Prevent rename"), wx.CheckBox(panel, CTRL_ID_ADVANCED_MODE, "Advanced mode")],
+                ['Original language:', wx.ComboBox(panel, CTRL_ID_FROM_LANG, choices=defaultFrom, style=wx.CB_READONLY), 'Translated language:', wx.ComboBox(panel, CTRL_ID_TO_LANG, choices=defaultTo, style=wx.CB_READONLY), wx.CheckBox(panel, CTRL_ID_BILINGUAL, "Bilingual text")],
+                [wx.CheckBox(panel, CTRL_ID_USE_DEFAULT, "Overwrite default"), wx.CheckBox(panel, CTRL_ID_USE_CUSTOM, "Use custom code"), wx.TextCtrl(panel, CTRL_ID_CUSTOM_CODE, size=(100, -1)), wx.CheckBox(panel, CTRL_ID_PREVENT_RENAME, "Prevent rename"), wx.CheckBox(panel, CTRL_ID_LUA_DETECT, "Detect script"), wx.CheckBox(panel, CTRL_ID_ADVANCED_MODE, "Advanced mode")],
                 ['Split size:', textctrl_split_size, 'Delay interval(s):', textctrl_delay, 'ID Filter:', wx.TextCtrl(panel, CTRL_ID_FILTER, size=(500, -1))],
-                [wx.Button(panel, CTRL_ID_TRANSLATE, "Translate"), wx.Button(panel, CTRL_ID_CANCEL, "Stop"), wx.Button(panel, CTRL_ID_DOWNLOAD, "Review"), wx.Button(panel, CTRL_ID_UPLOAD, "Upload review"), wx.Button(panel, CTRL_ID_MAKE, "Make .miz/.cmp"), '', wx.Button(panel, CTRL_ID_RRULES, 'R. Rules')],
+                [wx.Button(panel, CTRL_ID_TRANSLATE, "Translate"), wx.Button(panel, CTRL_ID_CANCEL, "Stop"), wx.Button(panel, CTRL_ID_ORG_DOWNLOAD, "Review Untranslated"), wx.Button(panel, CTRL_ID_DOWNLOAD, "Review Translated"), wx.Button(panel, CTRL_ID_UPLOAD, "Upload Review"), wx.Button(panel, CTRL_ID_MAKE, "Make .miz/.cmp"), '', wx.Button(panel, CTRL_ID_RRULES, 'R. Rules')],
                 [wx.TextCtrl(panel, CTRL_ID_OUTPUT, size=(-1, -1), style=wx.TE_MULTILINE | wx.TE_READONLY)],
-                ["%s" % version.get_version().split("\n")[0], link1, link2],
+                ["Ver %s" % version.get_version().split("\n")[0], link1, link2, "", wx.Button(panel, CTRL_ID_CLEAR, "Clear")],
             ],
-            stretchCols = [(1, 1), (2, 1), (5, 5), (6, 5), (7, 0)], stretchRow = 7
+            stretchCols = [(1, 1), (2, 1), (5, 5), (6, 6), (7, 0), (8, 3)], stretchRow = 7
         )
         self.SetOnEvent(self.OnEvent)
         textctrl_split_size.Bind(wx.EVT_CHAR, self.on_char)
@@ -284,6 +298,7 @@ class MainWindow(EzFrame):
 
         Thread(group=None, target=self.on_init, kwargs=None).start()
         self.miz = None
+        self.cmp = None
 
     def on_close(self, event):
         if self.state['processing'] == True:
@@ -308,6 +323,7 @@ class MainWindow(EzFrame):
             'delay': to_int(values[CTRL_ID_DELAY]),
             'filter1': values[CTRL_ID_FILTER],
             'bilingual': values[CTRL_ID_BILINGUAL],
+            'lua_detect': values[CTRL_ID_LUA_DETECT],
         }
 
     def print_err(self, e, code):
@@ -324,7 +340,7 @@ class MainWindow(EzFrame):
         
         print(f'Error({code}): {str1}')
     
-    def on_translate(self, mode = None, dest_miz: str = None, whole: bool = True, from_lang=None, to_lang=None, use_default=False, use_custom=False, custom_code='', advanced_mode = False, prevent_rename = None, split_size = 0, delay = 0, filter1='', bilingual=False):
+    def on_translate(self, mode = None, dest_miz: str = None, whole: bool = True, from_lang=None, to_lang=None, use_default=False, use_custom=False, custom_code='', advanced_mode = False, prevent_rename = None, split_size = 0, delay = 0, filter1='', bilingual=False, lua_detect=False):
         to_continue = False
         extra = {
             'use_default': use_default,
@@ -337,6 +353,7 @@ class MainWindow(EzFrame):
             'filter1': filter1,
             'pseudo': False,
             'bilingual': bilingual,
+            'lua_detect': lua_detect,
         }
         if mode == MODE_MIZ:
             try:
@@ -365,7 +382,7 @@ class MainWindow(EzFrame):
         if self.exiting == False:
             self.update_control()
     
-    def on_save(self, mode = None, dest_miz: str = None, whole: bool = True, from_lang=None, to_lang=None, use_default=False, use_custom=False, custom_code='', advanced_mode = False, prevent_rename = None, split_size = 0, delay = 0, filter1='', bilingual=False):
+    def on_save(self, mode = None, dest_miz: str = None, whole: bool = True, from_lang=None, to_lang=None, use_default=False, use_custom=False, custom_code='', advanced_mode = False, prevent_rename = None, split_size = 0, delay = 0, filter1='', bilingual=False, lua_detect=False):
         if mode == MODE_MIZ:
             try:
                 self.miz.save()
@@ -380,7 +397,7 @@ class MainWindow(EzFrame):
         self.state['processing'] = False
         self.update_control()
     
-    def on_onepass(self, mode = None, dest_miz: str = None, whole: bool = True, from_lang=None, to_lang=None, use_default=False, use_custom=False, custom_code='', advanced_mode = False, prevent_rename = None, split_size = 0, delay = 0, filter1='', bilingual=False):
+    def on_onepass(self, mode = None, dest_miz: str = None, whole: bool = True, from_lang=None, to_lang=None, use_default=False, use_custom=False, custom_code='', advanced_mode = False, prevent_rename = None, split_size = 0, delay = 0, filter1='', bilingual=False, lua_detect=False):
         extra = {
             'use_default': use_default,
             'use_custom': use_custom,
@@ -392,6 +409,7 @@ class MainWindow(EzFrame):
             'filter1': filter1,
             'pseudo': False,
             'bilingual': bilingual,
+            'lua_detect': lua_detect,
         }
         if mode == MODE_MIZ:
             try:
@@ -413,23 +431,61 @@ class MainWindow(EzFrame):
         if self.exiting == False:
             self.update_control()
 
-    def on_download(self, values):
+    def on_download(self, values, download_org = False):
         path = values[CTRL_ID_PATH]
+        from_lang = values[CTRL_ID_FROM_LANG]
+        to_lang = values[CTRL_ID_TO_LANG]
+
+        extra = {
+            'use_default': values[CTRL_ID_USE_DEFAULT],
+            'use_custom': values[CTRL_ID_USE_CUSTOM],
+            'custom_code': values[CTRL_ID_CUSTOM_CODE],
+            'advanced_mode': values[CTRL_ID_ADVANCED_MODE],
+            'prevent_rename': values[CTRL_ID_PREVENT_RENAME],
+            'split_size': to_int(values[CTRL_ID_SPLIT_SIZE]),
+            'delay': to_int(values[CTRL_ID_DELAY]),
+            'filter1': values[CTRL_ID_FILTER],
+            'pseudo': True,
+            'bilingual': values[CTRL_ID_BILINGUAL],
+            'lua_detect': values[CTRL_ID_LUA_DETECT],
+        }
+        
         if path.endswith('.miz'):
+            try:
+                if self.miz == None:
+                    miz = Mission(path)
+                    self.miz = miz
+                    self.miz.translate(None, True, from_lang, to_lang, extra)
+            except Exception as e:
+                self.print_err(e, 16)
+                return
+            
             default_path = self.miz.path.replace('.miz', '.xlsx')
 
             dialog = wx.FileDialog(self, "Save As", "", default_path, "Excel Workbook (*.xlsx)|*.xlsx", wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT)
             if dialog.ShowModal() == wx.ID_CANCEL:
                 return
-            
+
             filename = dialog.GetPath()
             if filename:
                 try:
-                    self.miz.save_to_xls(filename)
-                    print('Review file downloaded')
+                    if download_org:
+                        self.miz.save_to_xls_org(filename)
+                    else:
+                        self.miz.save_to_xls(filename)
+                    print(f'Review file downloaded: {filename}')
                 except Exception as e:
                     self.print_err(e, 7)
         elif path.endswith('.cmp'):
+            try:
+                if self.cmp == None:
+                    cmp = Campaign(path)
+                    self.cmp = cmp
+                    self.cmp.translate(from_lang, to_lang, extra)
+            except Exception as e:
+                self.print_err(e, 17)
+                return
+            
             default_path = self.cmp.path.replace('.cmp', '.xlsx')
 
             dialog = wx.FileDialog(self, "Save As", "", default_path, "Excel Workbook (*.xlsx)|*.xlsx", wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT)
@@ -440,11 +496,13 @@ class MainWindow(EzFrame):
             if filename:
                 try:
                     self.cmp.save_to_xls(filename)
-                    print('Review file downloaded')
+                    print(f'Review file downloaded: {filename}')
                 except Exception as e:
                     self.print_err(e, 8)
         else:
             self.print_err(Exception(f'Please select mission or campaign file!'), 14)
+            
+        self.update_control()
         
     def on_upload(self, values):
         path = values[CTRL_ID_PATH]
@@ -462,6 +520,7 @@ class MainWindow(EzFrame):
             'filter1': values[CTRL_ID_FILTER],
             'pseudo': True,
             'bilingual': values[CTRL_ID_BILINGUAL],
+            'lua_detect': values[CTRL_ID_LUA_DETECT],
         }
         
         if path.endswith('.miz'):
@@ -476,9 +535,8 @@ class MainWindow(EzFrame):
                         miz = Mission(path)
                         self.miz = miz
                         self.miz.translate(None, True, from_lang, to_lang, extra)
-                    
                     self.miz.load_from_xls(filename)
-                    print('Review file uploaded')
+                    print(f'Review file uploaded: {filename}')
                     self.state['make-enabled'    ] = True
                     self.update_control()
                 except Exception as e:
@@ -497,7 +555,7 @@ class MainWindow(EzFrame):
                         self.cmp.translate(from_lang, to_lang, extra)
 
                     self.cmp.load_from_xls(filename)
-                    print('Review file uploaded')
+                    print(f'Review file uploaded: {filename}')
                     self.state['make-enabled'    ] = True
                     self.update_control()
                 except Exception as e:
@@ -512,19 +570,25 @@ class MainWindow(EzFrame):
             filename = dialog.GetPath()
             if filename:
                 self.UpdateValue(CTRL_ID_PATH, filename)
-                self.state['download-enabled'] = False
-                self.state['make-enabled'    ] = False
+                self.clear_translation()
                 self.update_control()
-                self.miz = None
-                self.cmp = None
 
         dialog.Destroy()
 
+    def clear_translation(self):
+        self.miz = None
+        self.cmp = None
+        self.state['download-enabled'] = False
+        self.state['make-enabled'    ] = False
+        
     def OnEvent(self, key):
         #print('OnEvent ' + str(key))
         
         values = self.GetValues()
-        if key == CTRL_ID_SAVE:
+        if key == CTRL_ID_CLEAR:
+            self.UpdateValue(CTRL_ID_OUTPUT, "")
+            self.update_control()
+        elif key == CTRL_ID_SAVE:
             try:
                 self.save_translator_key(values[CTRL_ID_TRANSLATOR_KEY], values[CTRL_ID_REGION])
             except Exception as e:
@@ -534,12 +598,12 @@ class MainWindow(EzFrame):
             Campaign.stop_process(True)
             Mission.stop_process(True)
             self.on_deinit()
-        elif key == CTRL_ID_FROM_LANG:
-            self.change_languages(values[CTRL_ID_FROM_LANG])
         elif key == CTRL_ID_BROWSE:
             self.on_browse()
         elif key == CTRL_ID_DOWNLOAD:
             self.on_download(values)
+        elif key == CTRL_ID_ORG_DOWNLOAD:
+            self.on_download(values, True)
         elif key == CTRL_ID_UPLOAD:
             self.on_upload(values)
         elif key == CTRL_ID_MAKE:
@@ -554,6 +618,7 @@ class MainWindow(EzFrame):
             except Exception as e:
                 self.print_err(e, 12)
         elif key == CTRL_ID_ADVANCED_MODE:
+            self.clear_translation()
             self.set_advanced_mode(values[CTRL_ID_ADVANCED_MODE])
             self.update_control()
         elif key == CTRL_ID_TRANSLATE:
@@ -611,6 +676,9 @@ class MainWindow(EzFrame):
                     print('Rules updated!')
             
             return
+        elif key == CTRL_ID_FROM_LANG or key == CTRL_ID_TO_LANG or key == CTRL_ID_USE_DEFAULT or key == CTRL_ID_USE_CUSTOM or key == CTRL_ID_CUSTOM_CODE or key == CTRL_ID_PREVENT_RENAME or key == CTRL_ID_BILINGUAL:
+            self.clear_translation()
+            self.update_control()
             
     def update_langs(self):
         self.UpdateValues(CTRL_ID_FROM_LANG, ['Auto'] + list(self.langs_dict))
@@ -619,16 +687,18 @@ class MainWindow(EzFrame):
         self.UpdateValue(CTRL_ID_TO_LANG, configDef['to_lang'])
 
     def empty_langs(self):
-        self.UpdateValues(CTRL_ID_FROM_LANG, ['Auto'])
-        self.UpdateValues(CTRL_ID_TO_LANG, [])
+        defaultFrom = ['Auto'] + defaultLangs
+        defaultTo = defaultLangs
+        
+        self.UpdateValues(CTRL_ID_FROM_LANG, defaultFrom)
+        self.UpdateValues(CTRL_ID_TO_LANG, defaultTo)
+        self.UpdateValue(CTRL_ID_FROM_LANG, configDef['from_lang'])
+        self.UpdateValue(CTRL_ID_TO_LANG, configDef['to_lang'])
 
     def save_translator_key(self, key, region):
         DcsDictionary.translator.save_key(key, region)
         #self.langs_dict = DcsDictionary.translator.get_langs()
         #self.update_langs()
-
-    def change_languages(self, from_lang):
-        pass
 
     def change_translator(self, values):
         self.state['initializing'    ] = True

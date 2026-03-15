@@ -76,7 +76,13 @@ class CmpDictionary(DcsDictionary):
         super().save_to_xls(org_dict, filename)
             
     def load_from_xls(self, filename):
-        tdd = super().load_from_xls(filename)
+        self.dict = {
+            'description': self.trans_desc
+        }
+        org_dict = {
+            'description': self.desc
+        }
+        tdd = super().load_from_xls(org_dict, filename)
         self.trans_desc = tdd.dict['description']
 
 
@@ -106,6 +112,7 @@ class Campaign:
         pseudo = extra['pseudo']
         # pseudo : set as true when click upload without translate
         self.bilingual = extra['bilingual']
+        self.lua_detect = extra['lua_detect']
 
         if pseudo == True:
             self.cmp_dict.translate(from_lang, to_lang, self.bilingual, True)
@@ -146,6 +153,7 @@ class Campaign:
                         'filter1': self.filter1,
                         'pseudo': False,
                         'bilingual': self.bilingual,
+                        'lua_detect': self.lua_detect,
                     }
                     miz.translate(os.path.join(dir_path, miz_name), True, self.from_lang, self.to_lang, extra)
                     miz.save()
@@ -157,7 +165,7 @@ class Campaign:
                     print(str(e))
                 i = i + 1
     
-        print('New translated campaign generated: {}'.format(dir_path))
+        print('\nNew translated campaign generated: {}'.format(dir_path))
 
     def save_to_xls(self, filename):
         self.cmp_dict.save_to_xls(filename)

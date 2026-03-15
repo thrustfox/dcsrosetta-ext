@@ -32,8 +32,11 @@ class Mission:
     def save_to_xls(self, filename):
         self.tdd.save_to_xls(self.dd.dict, filename)
             
+    def save_to_xls_org(self, filename):
+        self.dd.save_to_xls(self.dd.dict, filename)
+            
     def load_from_xls(self, filename):
-        self.tdd = self.tdd.load_from_xls(filename)
+        self.tdd = self.tdd.load_from_xls(self.dd.dict, filename)
 
     @staticmethod
     def stop_process(value):
@@ -52,7 +55,8 @@ class Mission:
         pseudo = extra['pseudo']
         # pseudo : set as true when click upload without translate
         bilingual = extra['bilingual']
-        
+        lua_detect = extra['lua_detect']
+
         campaign_mode = False
         if 'campaign_mode' in extra:
             campaign_mode = extra['campaign_mode']
@@ -64,9 +68,28 @@ class Mission:
             else:
                 raise (Exception(f'Please enter custom lang code!'))
 
+        if campaign_mode == False and pseudo == False:
+            str_msg = 'Yes' if bilingual else 'No'
+            print(f"Bilingual text: {str_msg}")
+            str_msg = 'Yes' if self.use_default else 'No'
+            print(f"Overwrite default: {str_msg}")
+            str_msg = 'Yes' if use_custom else 'No'
+            print(f"Use custom code: {str_msg}")
+            str_msg = 'Yes' if self.prevent_rename else 'No'
+            print(f"Prevent rename: {str_msg}")
+            str_msg = 'Yes' if lua_detect else 'No'
+            print(f"Detect script: {str_msg}")
+            print(f"Split size: {split_size}")
+            print(f"Delay interval: {delay}")
+            if filter1:
+                filters = [f.strip() for f in filter1.split(',') if f.strip()]
+                if filters:
+                    print(f"Translation skip filter: {filters}")
+            print(f"")
+
         if campaign_mode == False:
             if pseudo != True:
-                print('Translating mission...')
+                print(f'Translating mission: {self.path}')
         else:
             basename = os.path.basename(self.path)
             print(f'\nTranslating mission: {basename}')
@@ -84,13 +107,13 @@ class Mission:
         self.tmp = tmp
 
         if pseudo == True:
-            self.tdd = DcsDictionary.from_dict({})
+            self.tdd = self.dd
         else:
             if whole:
                 # orginal version: useArray was not supported
                 # deepl/ms version: useArray is supported
                 try:
-                    self.tdd = self.dd.translate_whole(from_lang, to_lang, self.useArray, split_size, delay, filter1, bilingual)
+                    self.tdd = self.dd.translate_whole(from_lang, to_lang, self.useArray, split_size, delay, filter1, bilingual, lua_detect)
                 except Exception as e:
                     if ('Quota Exceeded' in str(e)):
                         raise (e)
