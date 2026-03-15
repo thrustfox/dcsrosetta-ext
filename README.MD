@@ -85,6 +85,8 @@ In advanced mode, you can save translated texts as excel file, correct the trans
 
 8. Press 'Upload review' button and select adjusted excel file. (You can skip Step 5, 6 if you already have excel file which you saved before)
 
+** Even if compatibility check fails, you can still generate the mission. Omitted strings in Excel will be maintained as untranslated.
+
 9. Press 'Make .miz/.cmp' button and tranlated mission will be generated.
 
 ** In advanced mode, missions in campaign will not be translated together. You should translated them separately.
@@ -105,10 +107,19 @@ In advanced mode, you can save translated texts as excel file, correct the trans
 
 - R.Rules (Replacement Rules): According to these rules, text replacement will be applied after the automatic translation. You can add your rule in format of 'text before:text after'
 
+- Detect script: If checked, it will automatically detect Lua script code and exclude it from translation. However, since it is not perfect, please turn it OFF if it malfunctions.
+
+
+
+## OFFLINE FEATURES
+
+Even if the translation engine is not configured, the following features are still available.
+
+- Saving untranslated excel review file.
+- Uploading excel review file and generating translated mission.
+
 
 
 ## TROUBLESHOOTING
 
-- If a script error occurs in the middle of playing the translated mission, you need to restore the script in the Excel file to its original text and apply it in advanced mode.
-
-
+- Some missions have script codes in the string resource. If the script is translated, script error can occur in the middle of playing the translated mission. To solve it, you must utilize the advanced mode and you need to restore the script in the Excel file to its original text and apply it.
